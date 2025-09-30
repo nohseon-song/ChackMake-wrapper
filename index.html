@@ -5,19 +5,21 @@
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
   <title>CheckMake PRO-Ultra</title>
 
-  <!-- GitHub Pages 프로젝트 경로 BASE -->
+  <!-- GitHub Pages 프로젝트 BASE 경로 -->
   <script>window.__BASE__ = "/ChackMake-wrapper/";</script>
 
   <!-- Manifest & Icons -->
   <link rel="manifest" id="mf">
+  <!-- iOS Safari 홈화면 추가 지원 -->
   <link rel="apple-touch-icon" id="ico180">
   <link rel="icon" sizes="192x192" id="ico192">
+  <link rel="icon" sizes="256x256" id="ico256">
   <link rel="icon" sizes="512x512" id="ico512">
   <meta name="theme-color" content="#111827">
 
   <style>
     body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,sans-serif;
-         display:grid;place-items:center;height:100vh;margin:0}
+         display:grid;place-items:center;height:100vh;margin:0;background:#fff}
     .wrap{display:flex;flex-direction:column;gap:16px;align-items:center}
     .btn{padding:12px 16px;border-radius:10px;border:0;cursor:pointer;font-weight:600}
     .primary{background:#2563eb;color:#fff}
@@ -39,20 +41,21 @@
     const BASE = window.__BASE__;
     const APP_URL = "https://chackmake-query-tool.lovable.app/auth";
 
-    // 절대 경로 주입
+    // 경로 주입
     document.getElementById('mf').href      = `${BASE}manifest.json`;
-    document.getElementById('ico180').href  = `${BASE}icons/icon-192.png`;
+    document.getElementById('ico180').href  = `${BASE}icons/icon-192.png`; // iOS용
     document.getElementById('ico192').href  = `${BASE}icons/icon-192.png`;
+    document.getElementById('ico256').href  = `${BASE}icons/icon-256.png`;
     document.getElementById('ico512').href  = `${BASE}icons/icon-512.png`;
     document.getElementById('logo').src     = `${BASE}icons/icon-512.png`;
 
-    // SW 등록
+    // 서비스워커 등록
     let swReady = Promise.resolve();
     if ('serviceWorker' in navigator) {
       swReady = navigator.serviceWorker.register(`${BASE}sw.js`);
     }
 
-    // beforeinstallprompt
+    // beforeinstallprompt 이벤트 핸들링
     let deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
@@ -69,22 +72,25 @@
       deferredPrompt = null;
     });
 
+    // 앱 열기 버튼 → 원본 URL로 이동
     document.getElementById('open').addEventListener('click', async () => {
       await swReady;
       location.href = APP_URL;
     });
 
-    // 이미 PWA 모드라면 바로 이동
+    // 이미 PWA 모드면 바로 원본 앱으로
     if (window.matchMedia('(display-mode: standalone)').matches) {
       location.replace(APP_URL);
     }
 
-    // 경로 오류 진단
+    // 리소스 경로 체크
     async function healthCheck(){
       const err = document.getElementById('err');
       const items = [
         ['manifest', `${BASE}manifest.json`],
-        ['icon512', `${BASE}icons/icon-512.png`],
+        ['icon192',  `${BASE}icons/icon-192.png`],
+        ['icon256',  `${BASE}icons/icon-256.png`],
+        ['icon512',  `${BASE}icons/icon-512.png`],
         ['sw',       `${BASE}sw.js`],
       ];
       const fails = [];
