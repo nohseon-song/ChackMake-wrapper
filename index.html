@@ -1,29 +1,71 @@
-<!DOCTYPE html><html lang="ko"><head>
-<meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Chackmake</title>
-<link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="./icons/icon-192.png">
-<link rel="icon" sizes="192x192" href="./icons/icon-192.png">
-<link rel="icon" sizes="512x512" href="./icons/icon-512.png">
-<meta name="theme-color" content="#111827">
-<style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,sans-serif;display:grid;place-items:center;height:100vh;margin:0} .hint{opacity:.7;font-size:.9rem}</style>
-</head><body>
-<div>
-  <div>앱을 실행 중입니다…</div>
-  <div class="hint">처음엔 설치 아이콘을 추가해 주세요</div>
-</div>
-<script>
-  const APP_URL = "https://chackmake-query-tool.lovable.app/auth";
-  const params = new URLSearchParams(location.search);
-  function goNow(){ location.replace(APP_URL); }
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>CheckMake PRO-Ultra</title>
+  <link rel="manifest" href="./manifest.json">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="icon" sizes="192x192" href="./icons/icon-192.png">
+  <link rel="icon" sizes="512x512" href="./icons/icon-512.png">
+  <meta name="theme-color" content="#111827">
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Apple SD Gothic Neo,Malgun Gothic,sans-serif;display:grid;place-items:center;height:100vh;margin:0;background:#fff}
+    .wrap{display:flex;flex-direction:column;gap:16px;align-items:center}
+    .btn{padding:12px 16px;border-radius:10px;border:0;cursor:pointer;font-weight:600}
+    .primary{background:#2563eb;color:#fff}
+    .ghost{background:#f4f4f5;color:#111}
+    .hint{opacity:.7;font-size:.9rem;text-align:center;max-width:360px}
+    img.logo{width:88px;height:88px;border-radius:22px}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <img class="logo" src="./icons/icon-512.png" alt="logo"/>
+    <h1>CheckMake PRO-Ultra</h1>
+    <button id="install" class="btn primary" style="display:none">홈 화면에 추가 / 앱 설치</button>
+    <button id="open" class="btn ghost">앱 열기</button>
+  </div>
 
-  // PWA 모드(standalone) 또는 autolaunch 쿼리면 즉시 진입
-  if (window.matchMedia('(display-mode: standalone)').matches || params.has('autolaunch')) { goNow(); }
+  <script>
+    const APP_URL = "https://chackmake-query-tool.lovable.app/auth";
 
-  // 서비스워커 등록
-  if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js'); }
+    // --- Service Worker 등록 (설치 가능성 평가를 위해 반드시 필요) ---
+    let swReady = Promise.resolve();
+    if ('serviceWorker' in navigator) {
+      swReady = navigator.serviceWorker.register('./sw.js');
+    }
 
-  // 브라우저 탭으로 들어와도 바로 원본으로
-  window.addEventListener('load', goNow);
-</script>
-</body></html>
+    // --- beforeinstallprompt 핸들링 (커스텀 설치 버튼 노출) ---
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      document.getElementById('install').style.display = 'inline-block';
+    });
+
+    document.getElementById('install').addEventListener('click', async () => {
+      if (!deferredPrompt) { alert("브라우저가 설치를 지원하지 않거나 이미 설치됨"); return; }
+      await deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      // 설치 성공 시 안내
+      if (choice.outcome === 'accepted') {
+        // 설치 후에는 아이콘에서 실행되므로 여기서 바로 열 필요는 없음.
+        document.querySelector('.hint').textContent = "설치 완료! 이제 아이콘으로 실행하세요.";
+      }
+    });
+
+    // --- 앱 열기 (SW가 준비된 뒤 원본으로 이동) ---
+    document.getElementById('open').addEventListener('click', async () => {
+      await swReady;               // SW 평가/설치 조건 보장
+      window.location.href = APP_URL;
+    });
+
+    // --- 이미 PWA 모드로 열린 경우 자동 진입 ---
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      window.location.replace(APP_URL);
+    }
+  </script>
+</body>
+</html>
