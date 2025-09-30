@@ -1,5 +1,5 @@
 {
-  "name": "ChacMake PRO-Ultra",
+  "name": "CheckMake PRO-Ultra",
   "short_name": "CM PRO-Ultra",
   "start_url": "./?autolaunch=1",
   "scope": "./",
@@ -12,6 +12,6 @@
     {"src":"./icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
   ],
   "shortcuts": [
-    {"name":"로그인","short_name":"Auth","url":"./?autolaunch=1#auth"}
+    {"name":"바로 열기","short_name":"열기","url":"./?autolaunch=1"}
   ]
 }
